@@ -23,11 +23,31 @@
 import Foundation
 import UIKit
 import Photos
+import RxSwift
 
 class PhotoWriter {
-  enum Errors: Error {
-    case couldNotSavePhoto
-  }
-
-
+    enum Errors: Error {
+        case couldNotSavePhoto
+    }
+    
+    static func save(_ image: UIImage) -> Observable<String> {
+        return Observable.create({ observer in
+            var assetID: String?
+            
+            PHPhotoLibrary.shared().performChanges({
+                let request = PHAssetChangeRequest.creationRequestForAsset(from: image)
+                assetID = request.placeholderForCreatedAsset?.localIdentifier
+            }) { success, error in
+                if success, let id = assetID {
+                    observer.onNext(id)
+                    observer.onCompleted()
+                } else {
+                    observer.onError(error as? Errors ?? Errors.couldNotSavePhoto)
+                }
+            }
+            
+            return Disposables.create()
+        })
+        
+    }
 }

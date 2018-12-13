@@ -49,17 +49,24 @@ class MainViewController: UIViewController {
     }
     
     @IBAction func actionSave() {
-        
+        guard let image = imagePreview.image else { return }
+        PhotoWriter.save(image)
+            .subscribe(onNext: { id in
+                self.showMessage(id, description: "Completed!")
+            }, onError: { error in
+                self.showMessage(error.localizedDescription)
+            }).disposed(by: disposeBag)
     }
     
     @IBAction func actionAdd() {
-        let photosViewController = storyboard!.instantiateViewController(withIdentifier: "PhotosViewController") as! PhotosViewController
+        guard let photosViewController = UIStoryboard.photoViewController() else { return }
         navigationController?.pushViewController(photosViewController, animated: true)
         
         photosViewController.selectedPhoto
-            .subscribe(onNext: { photo in
-                self.images.append(photo)
+            .subscribe(onNext: { image in
+                self.images.append(image)
                 self.imagesSubject.onNext(self.images)
+            }, onCompleted: {
                 
             }).disposed(by: disposeBag)
         
@@ -77,5 +84,15 @@ class MainViewController: UIViewController {
         let alert = UIAlertController(title: title, message: description, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Close", style: .default, handler: { [weak self] _ in self?.dismiss(animated: true, completion: nil)}))
         present(alert, animated: true, completion: nil)
+    }
+}
+
+extension UIStoryboard {
+    static func main() -> UIStoryboard {
+        return UIStoryboard(name: "Main", bundle: nil)
+    }
+    
+    static func photoViewController() -> PhotosViewController? {
+        return main().instantiateViewController(withIdentifier: "PhotosViewController") as? PhotosViewController
     }
 }

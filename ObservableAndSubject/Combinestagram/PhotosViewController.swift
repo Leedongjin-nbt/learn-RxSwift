@@ -25,17 +25,16 @@ import Photos
 import RxSwift
 
 class PhotosViewController: UICollectionViewController {
-    
     // MARK: public properties
     var selectedPhoto: Observable<UIImage> {
-        return selectedPhotoSubject.asObservable()
+        return selectPhoto.asObservable()
     }
     
     // MARK: private properties
     private lazy var photos = PhotosViewController.loadPhotos()
     private lazy var imageManager = PHCachingImageManager()
     
-    private var selectedPhotoSubject = PublishSubject<UIImage>()
+    private var selectPhoto = PublishSubject<UIImage>()
     
     private lazy var thumbnailSize: CGSize = {
         let cellSize = (self.collectionViewLayout as! UICollectionViewFlowLayout).itemSize
@@ -57,11 +56,10 @@ class PhotosViewController: UICollectionViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        selectedPhotoSubject.onCompleted()
+        selectPhoto.onCompleted()
     }
     
     // MARK: UICollectionView
-    
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return photos.count
     }
@@ -93,7 +91,7 @@ class PhotosViewController: UICollectionViewController {
             
             if let isThumbnail = info[PHImageResultIsDegradedKey as NSString] as?
                 Bool, !isThumbnail {
-                self?.selectedPhotoSubject.onNext(image)
+                self?.selectPhoto.onNext(image)
             }
             
         })
