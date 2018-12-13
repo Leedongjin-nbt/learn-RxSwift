@@ -51,8 +51,8 @@ class MainViewController: UIViewController {
     @IBAction func actionSave() {
         guard let image = imagePreview.image else { return }
         PhotoWriter.save(image)
-            .subscribe(onNext: { id in
-                self.showMessage(id, description: "Completed!")
+            .subscribe(onSuccess: { _ in
+                self.showMessage("saved")
             }, onError: { error in
                 self.showMessage(error.localizedDescription)
             }).disposed(by: disposeBag)
