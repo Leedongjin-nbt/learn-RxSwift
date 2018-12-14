@@ -31,6 +31,7 @@ class MainViewController: UIViewController {
     @IBOutlet weak var itemAdd: UIBarButtonItem!
     
     private var images = [UIImage]()
+    private var imageCache = [Int]()
     private var imagesSubject = BehaviorSubject<[UIImage]>(value: [])
     
     private let disposeBag = DisposeBag()
@@ -45,6 +46,7 @@ class MainViewController: UIViewController {
     
     @IBAction func actionClear() {
         images = []
+        imageCache = []
         imagesSubject.onNext(images)
     }
     
@@ -63,6 +65,14 @@ class MainViewController: UIViewController {
         navigationController?.pushViewController(photosViewController, animated: true)
         
         photosViewController.selectedPhoto
+            .takeWhile { _ in return self.images.count < 6 }
+            .filter { newImage in return newImage.size.width > newImage.size.height }
+            .filter { newImage in
+                let len = UIImagePNGRepresentation(newImage)?.count ?? 0
+                guard self.imageCache.contains(len) == false else { return false }
+                self.imageCache.append(len)
+                return true
+            }
             .subscribe(onNext: { image in
                 self.images.append(image)
                 self.imagesSubject.onNext(self.images)
@@ -70,6 +80,22 @@ class MainViewController: UIViewController {
                 
             }).disposed(by: disposeBag)
         
+        photosViewController.selectedPhoto
+            .share()
+            .ignoreElements()
+            .subscribe(onCompleted: {
+                self.updateNavigationIcon()
+            })
+            .disposed(by: disposeBag)
+        
+    }
+    
+    private func updateNavigationIcon() {
+        let icon = imagePreview.image?
+            .scaled(CGSize(width: 22, height: 22))
+            .withRenderingMode(.alwaysOriginal)
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: icon, style: .done, target: nil, action: nil)
     }
     
     private func setupUI(photos: [UIImage]) {
