@@ -39,6 +39,7 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         imagesSubject.asObservable()
+            .throttle(0.5, scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] photos in
                 self?.setupUI(photos: photos)
             }).disposed(by: disposeBag)
@@ -136,6 +137,6 @@ extension UIViewController {
             return Disposables.create {
                 self.dismiss(animated: true, completion: nil)
             }
-        })
+        }).timeout(0.5, scheduler: MainScheduler.instance)
     }
 }

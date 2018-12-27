@@ -12,20 +12,17 @@ import Photos
 
 extension PHPhotoLibrary {
     static var authorized: Observable<Bool> {
-        return Observable.create { observer in
+        return Observable<Bool>.create({ observer in
             if authorizationStatus() == .authorized {
                 observer.onNext(true)
                 observer.onCompleted()
             } else {
-                observer.onNext(false)
                 requestAuthorization { newStatus in
                     observer.onNext(newStatus == .authorized)
                     observer.onCompleted()
                 }
             }
-            
-            return Disposables.create()
-        }
-        
+        })
     }
+    
 }

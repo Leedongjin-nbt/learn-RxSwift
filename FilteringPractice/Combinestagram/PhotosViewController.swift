@@ -61,8 +61,26 @@ class PhotosViewController: UICollectionViewController {
             .take(1)
             .subscribe(onNext: { _ in
                 self.photos = PhotosViewController.loadPhotos()
-                self.collectionView?.reloadData()
+                DispatchQueue.main.async { self.collectionView?.reloadData() }
+                
             }).disposed(by: disposeBag)
+        
+        authorized
+            .skip(1)
+            .takeLast(1)
+            .subscribe(onNext: { _ in
+                DispatchQueue.main.async(execute: self.errorMessage)
+            }).disposed(by: disposeBag)
+    }
+    
+    private func errorMessage() {
+        alert("No access to Camera Roll",
+              description: "You can grant access to Combinestagram from the Settings app")
+            .subscribe(onCompleted: { [weak self] in
+                self?.dismiss(animated: true, completion: nil)
+                _ = self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
